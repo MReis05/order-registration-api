@@ -1,6 +1,8 @@
 package com.reis.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,7 +21,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.reis.entities.DirectOrder;
 import com.reis.entities.IfoodOrder;
 import com.reis.entities.Order;
+import com.reis.entities.DTOs.DirectOrderRequestDTO;
 import com.reis.entities.DTOs.DirectOrderResponseDTO;
+import com.reis.entities.DTOs.IfoodOrderRequestDTO;
 import com.reis.entities.DTOs.IfoodOrderResponseDTO;
 import com.reis.entities.enums.Category;
 import com.reis.entities.enums.PaymentMethod;
@@ -70,6 +74,53 @@ public class OrderServiceTest {
 		assertEquals(listExpected.get(0).getPaymentMethod(), listReceived.get(0).paymentMethod());
 		
 		verify(repository).findAllByType(Type.VIA_PEDIDO_DIRETO);
+	}
+	
+	@Test
+	@DisplayName("Should save DirectOrder and return DirectOrderResponseDTO")
+	void saveDirectOrderSuccessCase() {
+		DirectOrder order = createStandardDirectOrder();
+		DirectOrderRequestDTO dto = new DirectOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), order.getPaymentMethod(), order.getDate());
+		
+		when(repository.save(any(Order.class))).thenAnswer(invocation ->{
+			DirectOrder o = invocation.getArgument(0);
+			ReflectionTestUtils.setField(o, "id", 1L);
+			return o;
+		});
+		
+		DirectOrderResponseDTO orderReceived = service.saveDirectOrder(dto);
+		
+		assertNotNull(orderReceived);
+		assertEquals(dto.orderValue(), orderReceived.orderValue());
+		assertEquals(dto.deliveryValue(), orderReceived.deliveryValue());
+		assertEquals(dto.method(), orderReceived.paymentMethod());
+		assertEquals(dto.date(), orderReceived.date());
+		
+		verify(repository).save(any(Order.class));
+	}
+	
+	@Test
+	@DisplayName("Should save IfoodOrder and return IfoodOrderResponseDTO")
+	void saveIfoodOrderSuccessCase() {
+		IfoodOrder order = createStandardIfoodOrder();
+		IfoodOrderRequestDTO dto = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
+				null, null, false, order.getDate());
+		
+		when(repository.save(any(Order.class))).thenAnswer(invocation ->{
+			IfoodOrder o = invocation.getArgument(0);
+			ReflectionTestUtils.setField(o, "id", 1L);
+			return o;
+		});
+		
+		IfoodOrderResponseDTO orderReceived = service.saveIfoodOrder(dto);
+		
+		assertNotNull(orderReceived);
+		assertEquals(dto.orderValue(), orderReceived.orderValue());
+		assertEquals(dto.deliveryValue(), orderReceived.deliveryValue());
+		assertEquals(dto.method(), orderReceived.paymentMethod());
+		assertEquals(dto.date(), orderReceived.date());
+		
+		verify(repository).save(any(Order.class));
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

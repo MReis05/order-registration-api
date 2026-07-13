@@ -219,6 +219,37 @@ public class OrderServiceTest {
 		verify(repository, never()).save(any());
 	}
 	
+	@Test
+	@DisplayName("Should delete Order when id exists")
+	void deleteSuccessCase() {
+		Long id = 1L;
+		
+		when(repository.existsById(id)).thenReturn(true);
+		
+		service.deleteOrder(id);
+		
+		verify(repository).existsById(id);
+		verify(repository).deleteById(id);
+	}
+	
+	@Test
+	@DisplayName("Should throw a ResourceNotFoundException when doesn't find object")
+	void deleteResourceNotFoundCase() {
+		Long id = 99L;
+		
+		when(repository.existsById(id)).thenReturn(false);
+		
+		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->{
+			service.deleteOrder(id);
+		});
+		
+		assertNotNull(exception.getMessage());
+		assertEquals(ResourceNotFoundException.class, exception.getClass());
+		
+		verify(repository).existsById(id);
+		verify(repository, never()).deleteById(id);
+	}
+	
 	private IfoodOrder createStandardIfoodOrder() {
 		IfoodOrder obj = new IfoodOrder(createStandardOrder());
 		obj.setCategory(Category.VIA_IFOOD);

@@ -87,6 +87,14 @@ public class OrderService {
 		return new IfoodOrderResponseDTO(order);
 	}
 	
+	@Transactional
+	public void deleteOrder(Long id) {
+		if(!repository.existsById(id)) {
+			throw new ResourceNotFoundException(id);
+		}
+		repository.deleteById(id);
+	}
+	
 	private void updateIfoodOrderData(IfoodOrder order, IfoodOrderRequestDTO dto) {
 		LocalDate date;
 		if(dto.date() != null) {

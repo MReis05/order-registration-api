@@ -1,6 +1,7 @@
 package com.reis.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -279,6 +280,32 @@ public class OrderIntegrationTest {
 		assertEquals(new BigDecimal("30.00"), savedOrder.getOrderValue());
 		assertEquals(new BigDecimal("3.00"), savedOrder.getDeliveryValue());
 		assertEquals(PaymentMethod.IFOOD, savedOrder.getPaymentMethod());
+	}
+	
+	@Test
+	@DisplayName("Should return 204 No Content and delete Order in database (End-to-End)")
+	void deleteSuccessCase() throws Exception {
+		mockMvc.perform(
+				delete("/orders/" + directOrderId)
+				.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(status().isNoContent());
+		
+		assertEquals(repository.count(), 1);
+	}
+	
+	@Test
+	@DisplayName("Should return 404 Not Found and don't delete Order in database (End-to-End)")
+	void deleteResourceNotFoundCase() throws Exception {
+		mockMvc.perform(
+				delete("/orders/" + (directOrderId + 98L))
+				.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Resource not found"));
+
+		assertEquals(repository.count(), 2);
+
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

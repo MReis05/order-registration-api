@@ -3,6 +3,7 @@ package com.reis.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -221,6 +222,18 @@ public class OrderControllerTest {
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.status").value(404))
 				.andExpect(jsonPath("$.error").value("Resource not found"));
+	}
+	
+	@Test
+	@DisplayName("Should return 204 No Content when deleting Order")
+	void deleteSuccessCase() throws Exception {
+		Long id = 1L;
+		
+		mockMvc.perform(
+				delete("/orders/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(status().isNoContent());
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

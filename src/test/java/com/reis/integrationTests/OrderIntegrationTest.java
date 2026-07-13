@@ -3,6 +3,7 @@ package com.reis.integrationTests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -168,6 +169,116 @@ public class OrderIntegrationTest {
 		assertEquals(inputDTO.deliveryValue(), savedOrder.getDeliveryValue());
 		assertEquals(inputDTO.method(), savedOrder.getPaymentMethod());
 		assertEquals(inputDTO.date(), savedOrder.getDate());
+	}
+	
+	@Test
+	@DisplayName("Should return 200 Ok and update DirectOrder in database (End-to-End)")
+	void updateDirectOrderSuccessCase() throws Exception {
+		DirectOrderRequestDTO inputDTO = new DirectOrderRequestDTO(new BigDecimal("30.00"), new BigDecimal("4.00"),
+				PaymentMethod.CARTÃO, LocalDate.now());
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/direct/" + directOrderId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.orderValue").value(30.00))
+				.andExpect(jsonPath("$.deliveryValue").value(4.00))
+				.andExpect(jsonPath("$.paymentMethod").value(PaymentMethod.CARTÃO.name()));
+		
+		DirectOrder savedOrder = (DirectOrder) repository.findAllByType(Type.VIA_PEDIDO_DIRETO).stream()
+				.filter(o -> o.getPaymentMethod().equals(PaymentMethod.CARTÃO)).findFirst().orElseThrow();
+		
+		assertEquals(repository.count(), 2);
+		assertEquals(inputDTO.orderValue(), savedOrder.getOrderValue());
+		assertEquals(inputDTO.deliveryValue(), savedOrder.getDeliveryValue());
+		assertEquals(inputDTO.method(), savedOrder.getPaymentMethod());
+		assertEquals(inputDTO.date(), savedOrder.getDate());
+	}
+	
+	@Test
+	@DisplayName("Should return 404 Not Found and don't update DirectOrder in database (End-to-End)")
+	void updateDirectOrderResourceNotFoundCase() throws Exception {
+		DirectOrderRequestDTO inputDTO = new DirectOrderRequestDTO(new BigDecimal("30.00"), new BigDecimal("4.00"),
+				PaymentMethod.CARTÃO, LocalDate.now());
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/direct/" + (directOrderId + 98))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Resource not found"));
+		
+		DirectOrder savedOrder = (DirectOrder) repository.findAllByType(Type.VIA_PEDIDO_DIRETO).stream()
+				.filter(o -> o.getPaymentMethod().equals(PaymentMethod.DINHEIRO)).findFirst().orElseThrow();
+		
+		assertEquals(repository.count(), 2);
+		assertEquals(new BigDecimal("3.00"), savedOrder.getDeliveryValue());
+		assertEquals(PaymentMethod.DINHEIRO, savedOrder.getPaymentMethod());
+	}
+	
+	@Test
+	@DisplayName("Should return 200 Ok and update IfoodOrder in database (End-to-End)")
+	void updateIfoodOrderSuccessCase() throws Exception {
+		IfoodOrderRequestDTO inputDTO = new IfoodOrderRequestDTO(new BigDecimal("5.00"), new BigDecimal("4.00"), PaymentMethod.CARTÃO,
+				new BigDecimal("15.00"), true, true, LocalDate.now());
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/ifood/" + ifoodOrderId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.orderValue").value(20.00))
+				.andExpect(jsonPath("$.deliveryValue").value(4.00))
+				.andExpect(jsonPath("$.paymentMethod").value(PaymentMethod.CARTÃO.name()));
+		
+		IfoodOrder savedOrder = (IfoodOrder) repository.findAllByType(Type.VIA_IFOOD).stream()
+				.filter(o -> o.getPaymentMethod().equals(PaymentMethod.CARTÃO)).findFirst().orElseThrow();
+		
+		assertEquals(repository.count(), 2);
+		assertEquals(new BigDecimal("20.00"), savedOrder.getOrderValue());
+		assertEquals(inputDTO.deliveryValue(), savedOrder.getDeliveryValue());
+		assertEquals(inputDTO.method(), savedOrder.getPaymentMethod());
+		assertEquals(inputDTO.date(), savedOrder.getDate());
+		assertEquals(new BigDecimal("5.00"), savedOrder.getIfoodPaymentValue());
+		assertEquals(inputDTO.paymentValue(), savedOrder.getIfoodDirectPaymentValue());
+		assertEquals(new BigDecimal("0.99"), savedOrder.getServiceFee());
+	}
+	
+	@Test
+	@DisplayName("Should return 404 Not Found and don't update IfoodOrder in database (End-to-End)")
+	void updateIfoodOrderResourceNotFoundCase() throws Exception {
+		IfoodOrderRequestDTO inputDTO = new IfoodOrderRequestDTO(new BigDecimal("20.00"), new BigDecimal("4.00"), PaymentMethod.CARTÃO,
+				null, false, false, LocalDate.now());
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/ifood/" + (ifoodOrderId + 98))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Resource not found"));
+		
+		IfoodOrder savedOrder = (IfoodOrder) repository.findAllByType(Type.VIA_IFOOD).stream()
+				.filter(o -> o.getPaymentMethod().equals(PaymentMethod.IFOOD)).findFirst().orElseThrow();
+		
+		assertEquals(repository.count(), 2);
+		assertEquals(new BigDecimal("30.00"), savedOrder.getOrderValue());
+		assertEquals(new BigDecimal("3.00"), savedOrder.getDeliveryValue());
+		assertEquals(PaymentMethod.IFOOD, savedOrder.getPaymentMethod());
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

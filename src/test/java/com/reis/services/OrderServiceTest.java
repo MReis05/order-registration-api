@@ -2,13 +2,16 @@ package com.reis.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import com.reis.entities.enums.Category;
 import com.reis.entities.enums.PaymentMethod;
 import com.reis.entities.enums.Type;
 import com.reis.repositories.OrderRepository;
+import com.reis.services.exceptions.ResourceNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {
@@ -104,7 +108,7 @@ public class OrderServiceTest {
 	void saveIfoodOrderSuccessCase() {
 		IfoodOrder order = createStandardIfoodOrder();
 		IfoodOrderRequestDTO dto = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
-				null, null, false, order.getDate());
+				null, false, false, order.getDate());
 		
 		when(repository.save(any(Order.class))).thenAnswer(invocation ->{
 			IfoodOrder o = invocation.getArgument(0);
@@ -121,6 +125,98 @@ public class OrderServiceTest {
 		assertEquals(dto.date(), orderReceived.date());
 		
 		verify(repository).save(any(Order.class));
+	}
+	
+	@Test
+	@DisplayName("Should update DirectOrder and return DirectOrderResponseDTO")
+	void updateDirectOrderSuccessCase() {
+		Long id = 1L;
+		DirectOrder order = createStandardDirectOrder();
+		
+		when(repository.findById(id)).thenReturn(Optional.of(order));
+		
+		DirectOrderRequestDTO dto = new DirectOrderRequestDTO(new BigDecimal("40.00"), order.getDeliveryValue(), order.getPaymentMethod(), order.getDate());
+		
+		when(repository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		
+		DirectOrderResponseDTO orderReceived = service.updateDirectOrder(id, dto);
+		
+		assertNotNull(orderReceived);
+		assertEquals(dto.orderValue(), orderReceived.orderValue());
+		assertEquals(dto.deliveryValue(), orderReceived.deliveryValue());
+		assertEquals(dto.method(), orderReceived.paymentMethod());
+		assertEquals(dto.date(), orderReceived.date());
+		
+		verify(repository).findById(id);
+		verify(repository).save(any(Order.class));
+	}
+	
+	@Test
+	@DisplayName("Should throw a ResourceNotFoundException when doesn't find object")
+	void updateDirectOrderResourceNotFoundCase() {
+		Long id = 99L;
+		DirectOrder order = createStandardDirectOrder();
+		
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		
+		DirectOrderRequestDTO dto = new DirectOrderRequestDTO(new BigDecimal("40.00"), order.getDeliveryValue(), order.getPaymentMethod(), order.getDate());
+		
+		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->{
+			service.updateDirectOrder(id, dto);
+		});
+		
+		assertNotNull(exception.getMessage());
+		assertEquals(ResourceNotFoundException.class, exception.getClass());
+		
+		verify(repository).findById(id);
+		verify(repository, never()).save(any());
+	}
+	
+	@Test
+	@DisplayName("Should update IfoodOrder and return IfoodOrderResponseDTO")
+	void updateIfoodOrderSuccessCase() {
+		Long id = 1L;
+		IfoodOrder order = createStandardIfoodOrder();
+		
+		when(repository.findById(id)).thenReturn(Optional.of(order));
+		
+		IfoodOrderRequestDTO dto = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
+				null, false, false, order.getDate());
+		
+		when(repository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		
+		IfoodOrderResponseDTO orderReceived = service.updateIfoodOrder(id, dto);
+		
+		assertNotNull(orderReceived);
+		assertEquals(dto.orderValue(), orderReceived.orderValue());
+		assertEquals(dto.deliveryValue(), orderReceived.deliveryValue());
+		assertEquals(dto.method(), orderReceived.paymentMethod());
+		assertEquals(dto.date(), orderReceived.date());
+		
+		verify(repository).findById(id);
+		verify(repository).save(any(Order.class));
+	}
+	
+	@Test
+	@DisplayName("Should throw a ResourceNotFoundException when doesn't find object")
+	void updateIfoodOrderResourceNotFoundCase() {
+		Long id = 99L;
+		IfoodOrder order = createStandardIfoodOrder();
+		
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		
+		IfoodOrderRequestDTO dto = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
+				null, false, false, order.getDate());
+		
+		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->{
+			service.updateIfoodOrder(id, dto);
+		});
+		
+		assertNotNull(exception.getMessage());
+		assertEquals(ResourceNotFoundException.class, exception.getClass());
+		
+		verify(repository).findById(id);
+		verify(repository, never()).save(any());
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

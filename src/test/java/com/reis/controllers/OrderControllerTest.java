@@ -1,9 +1,11 @@
 package com.reis.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +34,7 @@ import com.reis.entities.enums.Category;
 import com.reis.entities.enums.PaymentMethod;
 import com.reis.entities.enums.Type;
 import com.reis.services.OrderService;
+import com.reis.services.exceptions.ResourceNotFoundException;
 
 @WebMvcTest(OrderController.class)
 public class OrderControllerTest {
@@ -109,7 +112,7 @@ public class OrderControllerTest {
 	void saveIfoodOrderSuccessCase() throws Exception {
 		IfoodOrder order = createStandardIfoodOrder();
 		IfoodOrderRequestDTO inputDTO = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
-				null, null, false, order.getDate());
+				null, false, false, order.getDate());
 		IfoodOrderResponseDTO outputDTO = new IfoodOrderResponseDTO(createStandardIfoodOrder());
 		
 		when(service.saveIfoodOrder(any(IfoodOrderRequestDTO.class))).thenReturn(outputDTO);
@@ -126,6 +129,98 @@ public class OrderControllerTest {
 				.andExpect(jsonPath("$.orderValue").value(30.00))
 				.andExpect(jsonPath("$.deliveryValue").value(3.00))
 				.andExpect(jsonPath("$.paymentMethod").value(PaymentMethod.IFOOD.name()));
+	}
+	
+	@Test
+	@DisplayName("Should return 200 OK when updating DirectOrder")
+	void updateDirectOrderSuccessCase() throws Exception {
+		Long id = 1L;
+		DirectOrder obj = createStandardDirectOrder();
+		DirectOrderRequestDTO inputDTO = new DirectOrderRequestDTO(obj.getOrderValue(), obj.getDeliveryValue(), obj.getPaymentMethod(), obj.getDate());
+		DirectOrderResponseDTO outputDTO = new DirectOrderResponseDTO(obj);
+		
+		when(service.updateDirectOrder(eq(id), any(DirectOrderRequestDTO.class))).thenReturn(outputDTO);
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/direct/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").exists())
+				.andExpect(jsonPath("$.orderValue").value(30.00))
+				.andExpect(jsonPath("$.deliveryValue").value(3.00))
+				.andExpect(jsonPath("$.paymentMethod").value(PaymentMethod.DINHEIRO.name()));
+	}
+	
+	@Test
+	@DisplayName("Should return 404 Not found when doesn't find object")
+	void updateDirectOrderResourceNotFoundCase() throws Exception {
+		Long id = 99L;
+		DirectOrder obj = createStandardDirectOrder();
+		DirectOrderRequestDTO inputDTO = new DirectOrderRequestDTO(obj.getOrderValue(), obj.getDeliveryValue(), obj.getPaymentMethod(), obj.getDate());
+		
+		when(service.updateDirectOrder(eq(id), any(DirectOrderRequestDTO.class))).thenThrow(ResourceNotFoundException.class);
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/direct/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Resource not found"));
+	}
+	
+	@Test
+	@DisplayName("Should return 200 Ok when updating IfoodOrder")
+	void updateIfoodOrderSuccessCase() throws Exception {
+		Long id = 1L;
+		IfoodOrder order = createStandardIfoodOrder();
+		IfoodOrderRequestDTO inputDTO = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
+				null, false, false, order.getDate());
+		IfoodOrderResponseDTO outputDTO = new IfoodOrderResponseDTO(createStandardIfoodOrder());
+		
+		when(service.updateIfoodOrder(eq(id), any(IfoodOrderRequestDTO.class))).thenReturn(outputDTO);
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/ifood/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").exists())
+				.andExpect(jsonPath("$.orderValue").value(30.00))
+				.andExpect(jsonPath("$.deliveryValue").value(3.00))
+				.andExpect(jsonPath("$.paymentMethod").value(PaymentMethod.IFOOD.name()));
+	}
+	
+	@Test
+	@DisplayName("Should return 404 Not found when doesn't find object")
+	void updateIfoodOrderResourceNotFoundCase() throws Exception {
+		Long id = 99L;
+		IfoodOrder order = createStandardIfoodOrder();
+		IfoodOrderRequestDTO inputDTO = new IfoodOrderRequestDTO(order.getOrderValue(), order.getDeliveryValue(), PaymentMethod.IFOOD,
+				null, false, false, order.getDate());
+		
+		when(service.updateIfoodOrder(eq(id), any(IfoodOrderRequestDTO.class))).thenThrow(ResourceNotFoundException.class);
+		
+		String jsonBody = mapper.writeValueAsString(inputDTO);
+		
+		mockMvc.perform(
+				put("/orders/ifood/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBody)
+				)
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Resource not found"));
 	}
 	
 	private IfoodOrder createStandardIfoodOrder() {

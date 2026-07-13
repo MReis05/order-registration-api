@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.reis.entities.DirectOrder;
 import com.reis.entities.IfoodOrder;
-import com.reis.entities.Order;
 import com.reis.entities.DTOs.DirectOrderRequestDTO;
 import com.reis.entities.DTOs.DirectOrderResponseDTO;
 import com.reis.entities.DTOs.IfoodOrderRequestDTO;
@@ -18,6 +17,7 @@ import com.reis.entities.enums.Category;
 import com.reis.entities.enums.PaymentMethod;
 import com.reis.entities.enums.Type;
 import com.reis.repositories.OrderRepository;
+import com.reis.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class OrderService {
@@ -46,14 +46,9 @@ public class OrderService {
 	
 	@Transactional
 	public DirectOrderResponseDTO saveDirectOrder(DirectOrderRequestDTO dto) {
-		LocalDate date;
-		if(dto.date() != null) {
-			date = dto.date();
-		}
-		else {
-			date = LocalDate.now();
-		}
-		DirectOrder order = new DirectOrder(new Order(dto.orderValue(), dto.deliveryValue(), dto.method(), Type.VIA_PEDIDO_DIRETO, date));
+		DirectOrder order = new DirectOrder();
+		
+		updateDirectOrderData(order, dto);
 		
 		order = repository.save(order);
 		
@@ -62,6 +57,37 @@ public class OrderService {
 	
 	@Transactional
 	public IfoodOrderResponseDTO saveIfoodOrder(IfoodOrderRequestDTO dto) {
+		IfoodOrder order = new IfoodOrder();
+		updateIfoodOrderData(order, dto);
+		
+		order = repository.save(order);
+		
+		return new IfoodOrderResponseDTO(order);
+	}
+	
+	@Transactional
+	public DirectOrderResponseDTO updateDirectOrder(Long id, DirectOrderRequestDTO dto) {
+		DirectOrder order = (DirectOrder) repository.findById(id).orElseThrow(()-> new ResourceNotFoundException(id));
+		
+		updateDirectOrderData(order, dto);
+		
+		order = repository.save(order);
+		
+		return new DirectOrderResponseDTO(order);
+	}
+	
+	@Transactional
+	public IfoodOrderResponseDTO updateIfoodOrder(Long id, IfoodOrderRequestDTO dto) {
+		IfoodOrder order = (IfoodOrder) repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+		
+		updateIfoodOrderData(order, dto);
+		
+		order = repository.save(order);
+		
+		return new IfoodOrderResponseDTO(order);
+	}
+	
+	private void updateIfoodOrderData(IfoodOrder order, IfoodOrderRequestDTO dto) {
 		LocalDate date;
 		if(dto.date() != null) {
 			date = dto.date();
@@ -69,21 +95,11 @@ public class OrderService {
 		else {
 			date = LocalDate.now();
 		}
-		
-		IfoodOrder order = instatiateIfoodOrder(dto);
-		order.setDate(date);
-		
-		order = repository.save(order);
-		
-		return new IfoodOrderResponseDTO(order);
-	}
-	
-	private IfoodOrder instatiateIfoodOrder(IfoodOrderRequestDTO dto) {
-		IfoodOrder order = new IfoodOrder();
 		order.setOrderValue(dto.orderValue());
 		order.setDeliveryValue(dto.deliveryValue());
 		order.setPaymentMethod(dto.method());
 		order.setType(Type.VIA_IFOOD);
+		order.setDate(date);
 		
 		if(dto.method() == PaymentMethod.IFOOD) {
 			order.setCategory(Category.VIA_IFOOD);
@@ -109,6 +125,20 @@ public class OrderService {
 		if(dto.doesHaveServiceFee()) {
 			order.setServiceFee(new BigDecimal("0.99"));
 		}
-		return order;
+	}
+	
+	private void updateDirectOrderData(DirectOrder obj, DirectOrderRequestDTO dto) {
+		LocalDate date;
+		if(dto.date() != null) {
+			date = dto.date();
+		}
+		else {
+			date = LocalDate.now();
+		}
+		obj.setOrderValue(dto.orderValue());
+		obj.setDeliveryValue(dto.deliveryValue());
+		obj.setPaymentMethod(dto.method());
+		obj.setDate(date);
+		obj.setType(Type.VIA_PEDIDO_DIRETO);
 	}
 }

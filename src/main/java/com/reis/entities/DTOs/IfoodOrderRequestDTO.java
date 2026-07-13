@@ -18,8 +18,8 @@ public record IfoodOrderRequestDTO(
 		@NotNull(message = "O metódo de pagamento é obrigatório.")
 		PaymentMethod method,
 		BigDecimal paymentValue,
-		Boolean isSplitPayment,
-		Boolean doesHaveServiceFee,
+		boolean isSplitPayment,
+		boolean doesHaveServiceFee,
 		LocalDate date
 		) {
 }

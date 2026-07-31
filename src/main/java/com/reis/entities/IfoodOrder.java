@@ -6,9 +6,11 @@ import java.math.RoundingMode;
 
 import com.reis.entities.enums.Category;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
+@DiscriminatorValue("VIA_IFOOD")
 public class IfoodOrder  extends Order implements Serializable {
 	private static final long serialVersionUID = 1L;
 	

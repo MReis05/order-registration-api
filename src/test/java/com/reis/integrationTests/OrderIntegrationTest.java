@@ -70,8 +70,10 @@ public class OrderIntegrationTest {
 	@Test
 	@DisplayName("Should return 200 Ok and a List of IfoodOrder (End-to-End)")
 	void findAllIfoodOrderSuccessCase() throws Exception {
+		String date = LocalDate.now().toString();
+		
 		mockMvc.perform(
-				get("/orders/ifood")
+				get("/orders/ifood?start=" + date + "&end=" + date)
 				.contentType(MediaType.APPLICATION_JSON)
 				)
 				.andExpect(status().isOk())
@@ -84,8 +86,10 @@ public class OrderIntegrationTest {
 	@Test
 	@DisplayName("Should return 200 Ok and a List of DirectOrder (End-to-End)")
 	void findAllDirectOrderSuccessCase() throws Exception {
+		String date = LocalDate.now().toString();
+		
 		mockMvc.perform(
-				get("/orders/direct")
+				get("/orders/directstart=" + date + "&end=" + date)
 				.contentType(MediaType.APPLICATION_JSON)
 				)
 				.andExpect(status().isOk())

@@ -47,10 +47,11 @@ public class OrderServiceTest {
 	@DisplayName("Should return a List<IfoodOrderResponseDTO> when finds objects")
 	void findAllIfoodOrderSuccessCase() {
 		List<Order> listExpected = List.of(createStandardIfoodOrder());
+		LocalDate date = createStandardIfoodOrder().getDate();
 		
-		when(repository.findAllByType(Type.VIA_IFOOD)).thenReturn(listExpected);
+		when(repository.findByTypeAndDateBetween(Type.VIA_IFOOD, date, null)).thenReturn(listExpected);
 		
-		List<IfoodOrderResponseDTO> listReceived = service.findAllIfoodOrder();
+		List<IfoodOrderResponseDTO> listReceived = service.findIfoodOrderByDate(createStandardIfoodOrder().getDate(), null);
 		
 		assertEquals(listExpected.size(), listReceived.size());
 		assertEquals(listExpected.get(0).getId(), listReceived.get(0).id());
@@ -59,17 +60,18 @@ public class OrderServiceTest {
 		assertEquals(listExpected.get(0).getPaymentMethod(), listReceived.get(0).paymentMethod());
 		assertEquals(createStandardIfoodOrder().getIfoodComission(), listReceived.get(0).ifoodComission());
 		
-		verify(repository).findAllByType(Type.VIA_IFOOD);
+		verify(repository).findByTypeAndDateBetween(Type.VIA_IFOOD, date, null);
 	}
 	
 	@Test
 	@DisplayName("Should return a List<DirectOrderResponseDTO> when finds objects")
 	void findAllDirectOrderSuccessCase() {
 		List<Order> listExpected = List.of(createStandardDirectOrder());
+		LocalDate date = createStandardDirectOrder().getDate();
 		
-		when(repository.findAllByType(Type.VIA_PEDIDO_DIRETO)).thenReturn(listExpected);
+		when(repository.findByTypeAndDateBetween(Type.VIA_PEDIDO_DIRETO, date, null)).thenReturn(listExpected);
 		
-		List<DirectOrderResponseDTO> listReceived = service.findAllDirectOrder();
+		List<DirectOrderResponseDTO> listReceived = service.findDirectOrderByDate(createStandardDirectOrder().getDate(), null);
 		
 		assertEquals(listExpected.size(), listReceived.size());
 		assertEquals(listExpected.get(0).getId(), listReceived.get(0).id());
@@ -77,7 +79,7 @@ public class OrderServiceTest {
 		assertEquals(listExpected.get(0).getDate(), listReceived.get(0).date());
 		assertEquals(listExpected.get(0).getPaymentMethod(), listReceived.get(0).paymentMethod());
 		
-		verify(repository).findAllByType(Type.VIA_PEDIDO_DIRETO);
+		verify(repository).findByTypeAndDateBetween(Type.VIA_PEDIDO_DIRETO, date, null);
 	}
 	
 	@Test

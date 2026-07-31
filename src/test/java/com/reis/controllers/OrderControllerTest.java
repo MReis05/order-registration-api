@@ -53,11 +53,13 @@ public class OrderControllerTest {
 	@DisplayName("Should return 200 Ok and a List of IfoodOrder")
 	void findAllIfoodOrderSuccessCase() throws Exception {
 		IfoodOrderResponseDTO dto = new IfoodOrderResponseDTO(createStandardIfoodOrder());
+		LocalDate date = dto.date();
+		String stringDate = date.toString();
 		
-		when(service.findAllIfoodOrder()).thenReturn(List.of(dto));
+		when(service.findIfoodOrderByDate(date, date)).thenReturn(List.of(dto));
 		
 		mockMvc.perform(
-				get("/orders/ifood")
+				get("/orders/ifood?start="+ stringDate + "&end=" + stringDate)
 				.contentType(MediaType.APPLICATION_JSON)
 				)
 				.andExpect(status().isOk())
@@ -71,11 +73,13 @@ public class OrderControllerTest {
 	@DisplayName("Should return 200 Ok and a List of DirectOrder")
 	void findAllDirectOrder() throws Exception {
 		DirectOrderResponseDTO dto = new DirectOrderResponseDTO(createStandardDirectOrder());
+		LocalDate date = dto.date();
+		String stringDate = date.toString();
 		
-		when(service.findAllDirectOrder()).thenReturn(List.of(dto));
+		when(service.findDirectOrderByDate(date, date)).thenReturn(List.of(dto));
 		
 		mockMvc.perform(
-				get("/orders/direct")
+				get("/orders/direct?start=" + stringDate + "&end=" + stringDate)
 				.contentType(MediaType.APPLICATION_JSON)
 				)
 				.andExpect(status().isOk())

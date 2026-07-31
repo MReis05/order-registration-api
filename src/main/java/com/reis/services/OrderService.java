@@ -13,6 +13,7 @@ import com.reis.entities.DTOs.DirectOrderRequestDTO;
 import com.reis.entities.DTOs.DirectOrderResponseDTO;
 import com.reis.entities.DTOs.IfoodOrderRequestDTO;
 import com.reis.entities.DTOs.IfoodOrderResponseDTO;
+import com.reis.entities.DTOs.OrderBalanceProjection;
 import com.reis.entities.enums.Category;
 import com.reis.entities.enums.PaymentMethod;
 import com.reis.entities.enums.Type;
@@ -29,16 +30,16 @@ public class OrderService {
 	}
 	
 	@Transactional(readOnly = true)
-	public List<IfoodOrderResponseDTO> findAllIfoodOrder(){
-		return repository.findAllByType(Type.VIA_IFOOD)
+	public List<IfoodOrderResponseDTO> findIfoodOrderByDate(LocalDate startDate, LocalDate finalDate){
+		return repository.findByTypeAndDateBetween(Type.VIA_IFOOD, startDate, finalDate)
 				.stream()
 				.map(order -> new IfoodOrderResponseDTO((IfoodOrder) order))
 				.toList();
 	}
 	
 	@Transactional(readOnly = true)
-	public List<DirectOrderResponseDTO> findAllDirectOrder(){
-		return repository.findAllByType(Type.VIA_PEDIDO_DIRETO)
+	public List<DirectOrderResponseDTO> findDirectOrderByDate(LocalDate startDate, LocalDate finalDate){
+		return repository.findByTypeAndDateBetween(Type.VIA_PEDIDO_DIRETO, startDate, finalDate)
 				.stream()
 				.map(order -> new DirectOrderResponseDTO((DirectOrder) order))
 				.toList();
@@ -93,6 +94,11 @@ public class OrderService {
 			throw new ResourceNotFoundException(id);
 		}
 		repository.deleteById(id);
+	}
+	
+	@Transactional(readOnly = true)
+	public OrderBalanceProjection getBalanceByDateRange(LocalDate start, LocalDate end) {
+		return repository.getBalanceByDateRange(start, end);
 	}
 	
 	private void updateIfoodOrderData(IfoodOrder order, IfoodOrderRequestDTO dto) {

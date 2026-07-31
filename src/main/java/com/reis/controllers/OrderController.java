@@ -1,6 +1,7 @@
 package com.reis.controllers;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -18,6 +20,7 @@ import com.reis.entities.DTOs.DirectOrderRequestDTO;
 import com.reis.entities.DTOs.DirectOrderResponseDTO;
 import com.reis.entities.DTOs.IfoodOrderRequestDTO;
 import com.reis.entities.DTOs.IfoodOrderResponseDTO;
+import com.reis.entities.DTOs.OrderBalanceProjection;
 import com.reis.services.OrderService;
 
 import jakarta.validation.Valid;
@@ -33,15 +36,21 @@ public class OrderController {
 	}
 	
 	@GetMapping("/ifood")
-	public ResponseEntity<List<IfoodOrderResponseDTO>> findAllIfoodOrder(){
-		List<IfoodOrderResponseDTO> list = service.findAllIfoodOrder();
+	public ResponseEntity<List<IfoodOrderResponseDTO>> findIfoodOrderByDate(@RequestParam LocalDate start, @RequestParam LocalDate end){
+		List<IfoodOrderResponseDTO> list = service.findIfoodOrderByDate(start, end);
 		return ResponseEntity.ok().body(list);
 	}
 	
 	@GetMapping("/direct")
-	public ResponseEntity<List<DirectOrderResponseDTO>> findAllDirectOrder(){
-		List<DirectOrderResponseDTO> list = service.findAllDirectOrder();
+	public ResponseEntity<List<DirectOrderResponseDTO>> findDirectOrderByDate(@RequestParam LocalDate start, @RequestParam LocalDate end){
+		List<DirectOrderResponseDTO> list = service.findDirectOrderByDate(start, end);
 		return ResponseEntity.ok().body(list);
+	}
+	
+	@GetMapping("/balance")
+	public ResponseEntity<OrderBalanceProjection> getBalanceByDateRange(@RequestParam LocalDate start, @RequestParam LocalDate end){
+		OrderBalanceProjection projection = service.getBalanceByDateRange(start, end);
+		return ResponseEntity.ok().body(projection);
 	}
 	
 	@PostMapping("/ifood")
